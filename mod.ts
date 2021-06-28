@@ -5,10 +5,8 @@ import { DiscordenoMessage } from "https://deno.land/x/discordeno@11.2.0/src/str
 import { Message } from "https://deno.land/x/discordeno@11.2.0/src/types/messages/message.ts";
 import { Embed } from "https://deno.land/x/discordeno@11.2.0/src/types/mod.ts";
 import { camelize } from "https://deno.land/x/discordeno@11.2.0/src/util/utils.ts";
-import { config } from "https://deno.land/x/dotenv@v2.0.0/mod.ts";
 
 
-config();
 const amazonRegex = new RegExp("https?://.*?amazon\\.co\\.jp.*/(gp(/product)?|dp|ASIN)/([^/?]{10,})\\S*", "g");
 const webhookName = "Amazon-URL-Shortener"
 const footer = "Powered by Amazon URL Shortener (@aiotter)"
@@ -68,7 +66,7 @@ async function fetchAmazonData(url: string) {
 }
 
 startBot({
-  token: config().TOKEN as string,
+  token: Deno.env.get("TOKEN") as string,
   intents: ["Guilds", "GuildMessages"],
   eventHandlers: {
     ready() {
