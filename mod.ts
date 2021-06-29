@@ -87,10 +87,11 @@ startBot({
       if (processingMessageIds.includes(message.id)) return;
       processingMessageIds.push(message.id);
 
-      const webhook = await ensureWebhook(message.channelId);
-      if (!webhook) {
-        await message.send("Webhook を作成できません！");
-        setTimeout(() => message.delete(), 5);
+      let webhook;
+      try {
+        webhook = await ensureWebhook(message.channelId);
+      } catch (error) {
+        console.error(error);
         return;
       }
 
