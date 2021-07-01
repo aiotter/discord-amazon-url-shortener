@@ -47,11 +47,18 @@ async function ensureWebhook(channelId: bigint) {
 }
 
 function appendAmazonEmbed(embed: Embed, amazon: AmazonData) {
-  embed.thumbnail = { url: amazon.imageUrl };
-  embed.fields = [
-    { name: "価格", value: amazon.price ?? "？？？" },
-    { name: "評価", value: amazon.rating ?? "？？？" },
-  ];
+  if (amazon.imageUrl) {
+    embed.thumbnail = { url: amazon.imageUrl };
+  }
+
+  embed.fields = [];
+  if (amazon.price) {
+    embed.fields.push({ name: "価格", value: amazon.price });
+  }
+  if (amazon.rating) {
+    embed.fields.push({ name: "評価", value: amazon.rating });
+  }
+
   embed.footer = { text: footer };
   return embed;
 }
@@ -62,7 +69,7 @@ async function fetchAmazonData(url: string) {
   const document = new DOMParser().parseFromString(html, "text/html");
   return {
     price: document?.querySelector(
-      "#price,#newBuyBoxPrice,#priceblock_ourprice,#kindle-price,#price_inside_buybox,.slot-price>.a-color-price",
+      "#price,#newBuyBoxPrice,#priceblock_ourprice,#kindle-price,#price_inside_buybox,.slot-price",
     )?.textContent.replace(/^\s*(.*)\s*$/, "$1"),
     imageUrl:
       document?.querySelector("#landingImage,#imgBlkFront,#ebooksImgBlkFront")
@@ -106,7 +113,7 @@ startBot({
             messageId: message.id,
             embeds: updatedEmbeds,
           },
-        );
+        ).catch(console.error);
         return;
       }
 
@@ -170,7 +177,7 @@ startBot({
             messageId: message.id,
             embeds: updatedEmbeds,
           },
-        );
+        ).catch(console.error);
 
         processingMessageIds = processingMessageIds.filter((id) =>
           id !== message.id
