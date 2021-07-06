@@ -12,7 +12,6 @@ const amazonRegex = new RegExp(
 );
 const webhookName = "Amazon-URL-Shortener";
 const footer = "Powered by Amazon URL Shortener (@aiotter)";
-let processingMessageIds: bigint[] = [];
 
 interface AmazonData {
   price?: string;
@@ -90,10 +89,6 @@ startBot({
     async messageCreate(message) {
       if (!message.content.match(amazonRegex)) return;
 
-      // 同期制御
-      if (processingMessageIds.includes(message.id)) return;
-      processingMessageIds.push(message.id);
-
       let webhook;
       try {
         webhook = await ensureWebhook(message.channelId);
@@ -116,11 +111,6 @@ startBot({
         ).catch(console.error);
         return;
       }
-
-      processingMessageIds = processingMessageIds.filter((id) =>
-        id !== message.id
-      );
-      // processingMessageIds = processingMessageIds.slice(0,50);
 
       // オリジナルメッセージを削除し，短縮リンクに置き換えて投稿する
       if (!message.webhookId) {
@@ -149,10 +139,6 @@ startBot({
         const partialMessage = data.d as Message;
         if (partialMessage.editedTimestamp) return;
 
-        // 同期制御
-        if (processingMessageIds.includes(BigInt(partialMessage.id))) return;
-        processingMessageIds.push(BigInt(partialMessage.id));
-
         // すでに messageCreate で削除済みのメッセージに関するイベントが発生した場合に対応
         let message: DiscordenoMessage;
         try {
@@ -178,11 +164,6 @@ startBot({
             embeds: updatedEmbeds,
           },
         ).catch(console.error);
-
-        processingMessageIds = processingMessageIds.filter((id) =>
-          id !== message.id
-        );
-        // processingMessageIds = processingMessageIds.slice(0,50);
       }
     },
   },
