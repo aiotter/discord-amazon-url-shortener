@@ -14,6 +14,7 @@ const webhookName = "Amazon-URL-Shortener";
 const footer = "Powered by Amazon URL Shortener (@aiotter)";
 
 interface AmazonData {
+  productTitle?: string;
   price?: string;
   imageUrl?: string;
   rating?: string;
@@ -51,6 +52,9 @@ function appendAmazonEmbed(embed: Embed, amazon: AmazonData) {
   }
 
   embed.fields = [];
+  if (amazon.productTitle) {
+    embed.description = amazon.productTitle;
+  }
   if (amazon.price) {
     embed.fields.push({ name: "価格", value: amazon.price, inline: true });
   }
@@ -67,6 +71,7 @@ async function fetchAmazonData(url: string) {
   const html = await res.text();
   const document = new DOMParser().parseFromString(html, "text/html");
   return {
+    productTitle: document?.querySelector("#productTitle")?.textContent,
     price: document?.querySelector(
       "#price,#newBuyBoxPrice,#priceblock_ourprice,#kindle-price,#price_inside_buybox,.slot-price",
     )?.textContent.replace(/^\s*(.*)\s*$/, "$1"),
