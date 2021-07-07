@@ -52,10 +52,10 @@ function appendAmazonEmbed(embed: Embed, amazon: AmazonData) {
 
   embed.fields = [];
   if (amazon.price) {
-    embed.fields.push({ name: "価格", value: amazon.price });
+    embed.fields.push({ name: "価格", value: amazon.price, inline: true });
   }
   if (amazon.rating) {
-    embed.fields.push({ name: "評価", value: amazon.rating });
+    embed.fields.push({ name: "評価", value: amazon.rating, inline: true });
   }
 
   embed.footer = { text: footer };
