@@ -70,11 +70,24 @@ async function fetchAmazonData(url: string) {
   const res = await fetch(url);
   const html = await res.text();
   const document = new DOMParser().parseFromString(html, "text/html");
+
+  const priceQuery = [
+    "#priceblock_ourprice",
+    "#price",
+    "#newBuyBoxPrice",
+    "#kindle-price",
+    "#price_inside_buybox",
+    ".slot-price",
+  ].find((query) => document?.querySelector(query));
+
+  const price = priceQuery
+    ? document?.querySelector(priceQuery)?.textContent
+      .replace(/^\s*(.*)\s*$/, "$1")
+    : undefined;
+
   return {
     productTitle: document?.querySelector("#productTitle")?.textContent,
-    price: document?.querySelector(
-      "#price,#newBuyBoxPrice,#priceblock_ourprice,#kindle-price,#price_inside_buybox,.slot-price",
-    )?.textContent.replace(/^\s*(.*)\s*$/, "$1"),
+    price: price,
     imageUrl:
       document?.querySelector("#landingImage,#imgBlkFront,#ebooksImgBlkFront")
         ?.getAttribute("src") ?? undefined,
