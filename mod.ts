@@ -1,10 +1,17 @@
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.12-alpha/deno-dom-wasm.ts";
-import { startBot } from "https://deno.land/x/discordeno@11.2.0/mod.ts";
-import * as helpers from "https://deno.land/x/discordeno@11.2.0/src/helpers/mod.ts";
-import { DiscordenoMessage } from "https://deno.land/x/discordeno@11.2.0/src/structures/message.ts";
-import { Message } from "https://deno.land/x/discordeno@11.2.0/src/types/messages/message.ts";
-import { Embed } from "https://deno.land/x/discordeno@11.2.0/src/types/mod.ts";
-import { camelize } from "https://deno.land/x/discordeno@11.2.0/src/util/utils.ts";
+import {
+  camelize,
+  createWebhook,
+  DiscordenoMessage,
+  editWebhookMessage,
+  Embed,
+  getChannelWebhooks,
+  getMessage,
+  getWebhook,
+  Message,
+  sendWebhook,
+  startBot,
+} from "https://deno.land/x/discordeno@11.2.0/mod.ts";
 
 const amazonRegex = new RegExp(
   "https?://.*?amazon\\.co\\.jp.*/((gp(/product)?|dp|ASIN)|(customer-reviews|product-reviews))/([^/?]{10,})\\S*",
@@ -39,11 +46,11 @@ async function updateEmbeds(embeds: Embed[]) {
 }
 
 async function ensureWebhook(channelId: bigint) {
-  const webhooks = await helpers.getChannelWebhooks(channelId);
+  const webhooks = await getChannelWebhooks(channelId);
   for (const webhook of webhooks.values()) {
     if (webhook.token) return webhook;
   }
-  return await helpers.createWebhook(channelId, { name: webhookName });
+  return await createWebhook(channelId, { name: webhookName });
 }
 
 function appendAmazonEmbed(embed: Embed, amazon: AmazonData) {
@@ -127,9 +134,9 @@ if (import.meta.main) {
 
         if (message.embeds.length > 0 && message.webhookId) {
           const updatedEmbeds = await updateEmbeds(message.embeds);
-          const webhook = await helpers.getWebhook(message.webhookId);
+          const webhook = await getWebhook(message.webhookId);
           // if (JSON.stringify(updatedEmbeds) === JSON.stringify(message.embeds)) return;
-          helpers.editWebhookMessage(
+          editWebhookMessage(
             BigInt(webhook.id),
             webhook.token as string,
             {
@@ -144,7 +151,7 @@ if (import.meta.main) {
         if (!message.webhookId) {
           const { username, discriminator, id, avatar } =
             message.toJSON().author;
-          helpers.sendWebhook(BigInt(webhook.id), webhook.token as string, {
+          sendWebhook(BigInt(webhook.id), webhook.token as string, {
             content: shortenUrl(message.content),
             username: `${username}#${discriminator}`,
             avatarUrl: `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`,
@@ -167,7 +174,7 @@ if (import.meta.main) {
           // すでに messageCreate で削除済みのメッセージに関するイベントが発生した場合に対応
           let message: DiscordenoMessage;
           try {
-            message = await helpers.getMessage(
+            message = await getMessage(
               BigInt(partialMessage.channelId),
               BigInt(partialMessage.id),
             );
@@ -179,9 +186,9 @@ if (import.meta.main) {
           if (!message.webhookId || message.embeds.length === 0) return;
 
           const updatedEmbeds = await updateEmbeds(message.embeds);
-          const webhook = await helpers.getWebhook(message.webhookId);
+          const webhook = await getWebhook(message.webhookId);
           // if (JSON.stringify(updatedEmbeds) === JSON.stringify(message.embeds)) return;
-          helpers.editWebhookMessage(
+          editWebhookMessage(
             BigInt(webhook.id),
             webhook.token as string,
             {
