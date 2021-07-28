@@ -79,6 +79,17 @@ Deno.test("home electonic #1", async () => {
   );
 });
 
+// on sale when added this test
+Deno.test("health care product #1", async () => {
+  const url = "https://www.amazon.co.jp/gp/product/B08LG418TM/";
+  const data = await fetchAmazonData(url);
+  verifyAmazonData(data, TestItems.All);
+  assertEquals(
+    data.productTitle,
+    "フィリップス ブリーズマスク ブラック 電動ファン 高機能 花粉対応 スポーツマスク acm066/01",
+  );
+});
+
 // Copied from https://github.com/discordeno/discordeno/blob/main/tests/local.ts
 // Final cleanup
 import { cache, delay } from "https://deno.land/x/discordeno@11.2.0/mod.ts";

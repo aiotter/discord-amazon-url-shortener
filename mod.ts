@@ -73,10 +73,11 @@ export async function fetchAmazonData(url: string) {
 
   const priceQuery = [
     "#priceblock_ourprice",
-    "#price",
+    "#priceblock_dealprice",
     "#newBuyBoxPrice",
     "#kindle-price",
     "#price_inside_buybox",
+    "#price",
     ".slot-price",
   ].find((query) => document?.querySelector(query));
 
