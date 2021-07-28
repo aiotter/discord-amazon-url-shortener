@@ -13,7 +13,7 @@ const amazonRegex = new RegExp(
 const webhookName = "Amazon-URL-Shortener";
 const footer = "Powered by Amazon URL Shortener (@aiotter)";
 
-interface AmazonData {
+export interface AmazonData {
   productTitle?: string;
   price?: string;
   imageUrl?: string;
@@ -66,7 +66,7 @@ function appendAmazonEmbed(embed: Embed, amazon: AmazonData) {
   return embed;
 }
 
-async function fetchAmazonData(url: string) {
+export async function fetchAmazonData(url: string) {
   const res = await fetch(url);
   const html = await res.text();
   const document = new DOMParser().parseFromString(html, "text/html");
@@ -86,7 +86,7 @@ async function fetchAmazonData(url: string) {
     : undefined;
 
   return {
-    productTitle: document?.querySelector("#productTitle")?.textContent,
+    productTitle: document?.querySelector("#productTitle")?.textContent.trim(),
     price: price,
     imageUrl:
       document?.querySelector("#landingImage,#imgBlkFront,#ebooksImgBlkFront")
@@ -96,93 +96,99 @@ async function fetchAmazonData(url: string) {
   };
 }
 
-startBot({
-  token: Deno.env.get("TOKEN") as string,
-  intents: ["Guilds", "GuildMessages"],
-  eventHandlers: {
-    ready() {
-      console.log("Successfully connected to gateway");
-    },
+export function shortenUrl(url: string) {
+  return url.replaceAll(
+    amazonRegex,
+    (_0, _1, _2, asin) => `https://www.amazon.co.jp/gp/product/${asin}/`,
+  );
+}
 
-    async messageCreate(message) {
-      if (!message.content.match(amazonRegex)) return;
+if (import.meta.main) {
+  startBot({
+    token: Deno.env.get("TOKEN") as string,
+    intents: ["Guilds", "GuildMessages"],
+    eventHandlers: {
+      ready() {
+        console.log("Successfully connected to gateway");
+      },
 
-      let webhook;
-      try {
-        webhook = await ensureWebhook(message.channelId);
-      } catch (error) {
-        console.error(error);
-        return;
-      }
+      async messageCreate(message) {
+        if (!message.content.match(amazonRegex)) return;
 
-      if (message.embeds.length > 0 && message.webhookId) {
-        const updatedEmbeds = await updateEmbeds(message.embeds);
-        const webhook = await helpers.getWebhook(message.webhookId);
-        // if (JSON.stringify(updatedEmbeds) === JSON.stringify(message.embeds)) return;
-        helpers.editWebhookMessage(
-          BigInt(webhook.id),
-          webhook.token as string,
-          {
-            messageId: message.id,
-            embeds: updatedEmbeds,
-          },
-        ).catch(console.error);
-        return;
-      }
-
-      // オリジナルメッセージを削除し，短縮リンクに置き換えて投稿する
-      if (!message.webhookId) {
-        const { username, discriminator, id, avatar } = message.toJSON().author;
-        helpers.sendWebhook(BigInt(webhook.id), webhook.token as string, {
-          content: message.content.replaceAll(
-            amazonRegex,
-            (_0, _1, _2, asin) =>
-              `https://www.amazon.co.jp/gp/product/${asin}/`,
-          ),
-          username: `${username}#${discriminator}`,
-          avatarUrl: `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`,
-        })
-          .then(() => message.delete("Shortening Amazon URL"))
-          .catch((error) => console.log(error));
-      }
-    },
-
-    async raw(data) {
-      // embed が追加されたらそこに情報を足す
-      // 最初からユーザーが送ったメッセージに embed が追加されていることもある
-      if (data.t === "MESSAGE_UPDATE") {
-        data = camelize(data);
-
-        // discord が追加した embed は編集日時が存在しない
-        const partialMessage = data.d as Message;
-        if (partialMessage.editedTimestamp) return;
-
-        // すでに messageCreate で削除済みのメッセージに関するイベントが発生した場合に対応
-        let message: DiscordenoMessage;
+        let webhook;
         try {
-          message = await helpers.getMessage(
-            BigInt(partialMessage.channelId),
-            BigInt(partialMessage.id),
-          );
+          webhook = await ensureWebhook(message.channelId);
         } catch (error) {
-          console.log(error);
+          console.error(error);
           return;
         }
 
-        if (!message.webhookId || message.embeds.length === 0) return;
+        if (message.embeds.length > 0 && message.webhookId) {
+          const updatedEmbeds = await updateEmbeds(message.embeds);
+          const webhook = await helpers.getWebhook(message.webhookId);
+          // if (JSON.stringify(updatedEmbeds) === JSON.stringify(message.embeds)) return;
+          helpers.editWebhookMessage(
+            BigInt(webhook.id),
+            webhook.token as string,
+            {
+              messageId: message.id,
+              embeds: updatedEmbeds,
+            },
+          ).catch(console.error);
+          return;
+        }
 
-        const updatedEmbeds = await updateEmbeds(message.embeds);
-        const webhook = await helpers.getWebhook(message.webhookId);
-        // if (JSON.stringify(updatedEmbeds) === JSON.stringify(message.embeds)) return;
-        helpers.editWebhookMessage(
-          BigInt(webhook.id),
-          webhook.token as string,
-          {
-            messageId: message.id,
-            embeds: updatedEmbeds,
-          },
-        ).catch(console.error);
-      }
+        // オリジナルメッセージを削除し，短縮リンクに置き換えて投稿する
+        if (!message.webhookId) {
+          const { username, discriminator, id, avatar } =
+            message.toJSON().author;
+          helpers.sendWebhook(BigInt(webhook.id), webhook.token as string, {
+            content: shortenUrl(message.content),
+            username: `${username}#${discriminator}`,
+            avatarUrl: `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`,
+          })
+            .then(() => message.delete("Shortening Amazon URL"))
+            .catch((error) => console.log(error));
+        }
+      },
+
+      async raw(data) {
+        // embed が追加されたらそこに情報を足す
+        // 最初からユーザーが送ったメッセージに embed が追加されていることもある
+        if (data.t === "MESSAGE_UPDATE") {
+          data = camelize(data);
+
+          // discord が追加した embed は編集日時が存在しない
+          const partialMessage = data.d as Message;
+          if (partialMessage.editedTimestamp) return;
+
+          // すでに messageCreate で削除済みのメッセージに関するイベントが発生した場合に対応
+          let message: DiscordenoMessage;
+          try {
+            message = await helpers.getMessage(
+              BigInt(partialMessage.channelId),
+              BigInt(partialMessage.id),
+            );
+          } catch (error) {
+            console.log(error);
+            return;
+          }
+
+          if (!message.webhookId || message.embeds.length === 0) return;
+
+          const updatedEmbeds = await updateEmbeds(message.embeds);
+          const webhook = await helpers.getWebhook(message.webhookId);
+          // if (JSON.stringify(updatedEmbeds) === JSON.stringify(message.embeds)) return;
+          helpers.editWebhookMessage(
+            BigInt(webhook.id),
+            webhook.token as string,
+            {
+              messageId: message.id,
+              embeds: updatedEmbeds,
+            },
+          ).catch(console.error);
+        }
+      },
     },
-  },
-});
+  });
+}
