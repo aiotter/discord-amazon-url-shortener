@@ -93,11 +93,9 @@ Deno.test("health care product #1", async () => {
 // Copied from https://github.com/discordeno/discordeno/blob/main/tests/local.ts
 // Final cleanup
 import { cache, delay } from "https://deno.land/x/discordeno@11.2.0/mod.ts";
-if (import.meta.main) {
-  // clear all the sweeper intervals
-  for (const c of Object.values(cache)) {
-    if (!(c instanceof Map)) continue;
-    c.stopSweeper();
-  }
-  await delay(3000);
+// clear all the sweeper intervals
+for (const c of Object.values(cache)) {
+  if (!(c instanceof Map)) continue;
+  c.stopSweeper();
 }
+await delay(3000);
