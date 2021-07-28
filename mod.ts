@@ -7,7 +7,7 @@ import { Embed } from "https://deno.land/x/discordeno@11.2.0/src/types/mod.ts";
 import { camelize } from "https://deno.land/x/discordeno@11.2.0/src/util/utils.ts";
 
 const amazonRegex = new RegExp(
-  "https?://.*?amazon\\.co\\.jp.*/(gp(/product)?|dp|ASIN)/([^/?]{10,})\\S*",
+  "https?://.*?amazon\\.co\\.jp.*/((gp(/product)?|dp|ASIN)|(customer-reviews|product-reviews))/([^/?]{10,})\\S*",
   "g",
 );
 const webhookName = "Amazon-URL-Shortener";
@@ -100,7 +100,8 @@ export async function fetchAmazonData(url: string) {
 export function shortenUrl(url: string) {
   return url.replaceAll(
     amazonRegex,
-    (_0, _1, _2, asin) => `https://www.amazon.co.jp/gp/product/${asin}/`,
+    (_0, _1, _2, _3, kind, id) =>
+      `https://www.amazon.co.jp/gp/${kind ?? "product"}/${id}/`,
   );
 }
 

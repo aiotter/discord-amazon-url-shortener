@@ -28,6 +28,24 @@ function verifyAmazonData(data: AmazonData, testItem: number = TestItems.All) {
   if (testItem & TestItems.Rating) assert(isValidRating(data.rating as string));
 }
 
+Deno.test("shorten links", () => {
+  [{
+    original:
+      "https://www.amazon.co.jp/江崎グリコ-おからだから-チョコチップ-2個入/dp/B00KV7RIPC/ref=sr_1_5_0o_life?__mk_ja_JP=カタカナ&almBrandId=44Op44Kk44OV&dchild=1&fpw=alm&keywords=おからだから&qid=1627501689&s=food-beverage&sr=1-5",
+    shortened: "https://www.amazon.co.jp/gp/product/B00KV7RIPC/",
+  }, {
+    original:
+      "https://www.amazon.co.jp/【Nintendo-Switch対応】ホリパッド-for-Nintendo-Switch/product-reviews/B071W13D4C?pageNumber=4",
+    shortened: "https://www.amazon.co.jp/gp/product-reviews/B071W13D4C/",
+  }, {
+    original:
+      "https://www.amazon.co.jp/gp/customer-reviews/RN648FRXN78LZ/ref=cm_cr_arp_d_viewpnt?ie=UTF8&ASIN=B071W13D4C#RN648FRXN78LZ",
+    shortened: "https://www.amazon.co.jp/gp/customer-reviews/RN648FRXN78LZ/",
+  }].forEach(({ original, shortened }) =>
+    assertEquals(shortenUrl(original), shortened)
+  );
+});
+
 Deno.test("Kindle book #1", async () => {
   const url =
     "https://www.amazon.co.jp/%E3%81%BE%E3%81%9F%E3%81%9E%E3%82%8D%E3%80%82-%EF%BC%91%E5%B7%BB-%E3%81%BE%E3%82%93%E3%81%8C%E3%82%BF%E3%82%A4%E3%83%A0%EF%BC%AB%EF%BC%B2%E3%82%B3%E3%83%9F%E3%83%83%E3%82%AF%E3%82%B9-%E5%B9%8C%E7%94%B0-ebook/dp/B08ZXMJCFR/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&dchild=1&keywords=%E3%81%BE%E3%81%9F%E3%81%9E%E3%82%8D&qid=1627492287&s=digital-text&sr=1-1";
