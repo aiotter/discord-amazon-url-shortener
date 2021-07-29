@@ -18,13 +18,10 @@ export async function fetchAmazonData(url: string) {
   const document = new DOMParser().parseFromString(html, "text/html");
 
   const priceQuery = [
-    "#priceblock_ourprice",
-    "#priceblock_dealprice",
-    "#newBuyBoxPrice",
-    "#kindle-price",
-    "#price_inside_buybox",
-    "#price",
-    ".slot-price",
+    "span#price",
+    "span#price_inside_buybox",
+    "span#newBuyBoxPrice",
+    "span#kindle-price",
   ].find((query) => document?.querySelector(query));
 
   const price = priceQuery
