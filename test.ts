@@ -1,4 +1,4 @@
-import { AmazonData, fetchAmazonData, shortenUrl } from "./mod.ts";
+import { AmazonData, fetchAmazonData, shortenUrl } from "./amazon.ts";
 import {
   assert,
   assertEquals,
@@ -107,13 +107,3 @@ Deno.test("health care product #1", async () => {
     "フィリップス ブリーズマスク ブラック 電動ファン 高機能 花粉対応 スポーツマスク acm066/01",
   );
 });
-
-// Copied from https://github.com/discordeno/discordeno/blob/main/tests/local.ts
-// Final cleanup
-import { cache, delay } from "https://deno.land/x/discordeno@11.2.0/mod.ts";
-// clear all the sweeper intervals
-for (const c of Object.values(cache)) {
-  if (!(c instanceof Map)) continue;
-  c.stopSweeper();
-}
-await delay(3000);
