@@ -1,16 +1,18 @@
 import {
+  cache,
   camelize,
   createWebhook,
   DiscordenoMessage,
   editWebhookMessage,
   Embed,
+  getChannel,
   getChannelWebhooks,
   getMessage,
   getWebhook,
   Message,
   sendWebhook,
   startBot,
-} from "https://deno.land/x/discordeno@11.2.0/mod.ts";
+} from "https://deno.land/x/discordeno@12.0.1/mod.ts";
 import {
   AmazonData,
   amazonUrlRegex,
@@ -79,12 +81,19 @@ if (import.meta.main) {
       async messageCreate(message) {
         if (!message.content.match(amazonUrlRegex)) return;
 
-        let webhook;
+        let webhook, thread;
         try {
           webhook = await ensureWebhook(message.channelId);
-        } catch (error) {
-          console.error(error);
-          return;
+        } catch {
+          try {
+            // when message is sent to thread
+            thread = cache.threads.get(message.channelId) ??
+              await getChannel(message.channelId);
+            webhook = await ensureWebhook(thread.parentId as bigint);
+          } catch (error) {
+            console.error(error);
+            return;
+          }
         }
 
         if (message.embeds.length > 0 && message.webhookId) {
@@ -107,6 +116,7 @@ if (import.meta.main) {
           const { username, discriminator, id, avatar } =
             message.toJSON().author;
           sendWebhook(BigInt(webhook.id), webhook.token as string, {
+            threadId: thread?.id,
             content: shortenUrl(message.content),
             username: `${username}#${discriminator}`,
             avatarUrl: `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`,
