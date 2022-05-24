@@ -22,6 +22,8 @@ export async function fetchAmazonData(url: string) {
     "span#price_inside_buybox",
     "span#newBuyBoxPrice",
     "span#kindle-price",
+    "span#a-price",
+    "span#a-color-price",
   ].find((query) => document?.querySelector(query));
 
   const price = priceQuery
